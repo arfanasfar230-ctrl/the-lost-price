@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Lost Price</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #d2b48c;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #8b4513;
+      color: #fff;
+      padding: 15px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .container {
+      padding: 20px;
+      text-align: center;
+    }
+    button {
+      background-color: #a0522d;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      margin: 10px;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .hidden {
+      display: none;
+    }
+    input, textarea, select {
+      display: block;
+      margin: 10px auto;
+      padding: 8px;
+      width: 80%;
+      max-width: 400px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+      justify-content: center;   /* ✅ tengah */
+      max-width: 900px;          /* ✅ batasi lebar */
+      margin-left: auto;         /* ✅ center */
+      margin-right: auto;
+    }
+    .card {
+      background: #f5deb3;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    .card img {
+      max-width: 100%;
+      border-radius: 8px;
+      height: 120px;
+      object-fit: cover;
+    }
+    .card h3 {
+      margin: 10px 0 5px;
+    }
+    .card button {
+      display: block;
+      margin: 10px auto 0 auto; /* ✅ tombol center */
+    }
+  </style>
+</head>
+<body>
+  <header>Lost Price</header>
+
+  <!-- Halaman Utama -->
+  <div id="halamanUtama" class="container">
+    <h2>Selamat Datang di Lost Price</h2>
+    <p>Platform jual beli sederhana dengan harga terbaik.</p>
+    <button onclick="tampilHalaman('halamanJual')">Jual</button>
+    <button onclick="tampilHalaman('halamanBeli')">Beli</button>
+    <button onclick="tampilHalaman('halamanKelola')">Kelola Barang</button>
+  </div>
+
+  <!-- Halaman Jual -->
+  <div id="halamanJual" class="container hidden">
+    <h2>Jual Barang</h2>
+    <input type="file" id="fotoBarang">
+    <input type="text" id="namaBarang" placeholder="Nama Barang">
+    <textarea id="ketBarang" placeholder="Keterangan Barang"></textarea>
+    <input type="number" id="hargaBarang" placeholder="Harga">
+    <input type="text" id="lokasiBarang" placeholder="Lokasi">
+    <button onclick="jualBarang()">Jual Sekarang</button>
+    <button onclick="tampilHalaman('halamanUtama')">Kembali</button>
+  </div>
+
+  <!-- Halaman Beli -->
+  <div id="halamanBeli" class="container hidden">
+    <h2>Daftar Barang Dijual</h2>
+    <div id="daftarBarang" class="grid"></div>
+    <button onclick="tampilHalaman('halamanUtama')">Kembali</button>
+  </div>
+
+  <!-- Halaman Pembayaran -->
+  <div id="halamanPembayaran" class="container hidden">
+    <h2>Metode Pembayaran</h2>
+    <p>Pilih metode pembayaran dan isi alamat penerima.</p>
+    <select id="metodePembayaran">
+      <option>Transfer Bank</option>
+      <option>COD</option>
+      <option>E-Wallet</option>
+    </select>
+    <textarea id="alamatPenerima" placeholder="Alamat Penerima"></textarea>
+    <button onclick="selesaiBeli()">Bayar</button>
+  </div>
+
+  <!-- Halaman Selesai -->
+  <div id="halamanSelesai" class="container hidden">
+    <h2>Terimakasih telah berkunjung!</h2>
+    <button onclick="tampilHalaman('halamanUtama')">Kembali ke Beranda</button>
+  </div>
+
+  <!-- Halaman Kelola Barang -->
+  <div id="halamanKelola" class="container hidden">
+    <h2>Kelola Barang Anda</h2>
+    <div id="daftarKelola" class="grid"></div>
+    <button onclick="tampilHalaman('halamanJual')">Tambah Barang</button>
+    <button onclick="tampilHalaman('halamanUtama')">Kembali</button>
+  </div>
+
+  <script>
+    let barangList = JSON.parse(localStorage.getItem('barangList')) || [];
+    let barangDipilih = null;
+
+    function tampilHalaman(id) {
+      document.querySelectorAll('.container').forEach(div => div.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+      if (id === 'halamanBeli') tampilkanBarang();
+      if (id === 'halamanKelola') tampilkanKelola();
+    }
+
+    function jualBarang() {
+      const fotoInput = document.getElementById('fotoBarang').files[0];
+      const nama = document.getElementById('namaBarang').value;
+      const ket = document.getElementById('ketBarang').value;
+      const harga = document.getElementById('hargaBarang').value;
+      const lokasi = document.getElementById('lokasiBarang').value;
+
+      if (!fotoInput || !nama || !harga || !lokasi) {
+        alert("Harap isi semua data!");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const barang = {
+          foto: e.target.result,
+          nama,
+          ket,
+          harga,
+          lokasi
+        };
+        barangList.push(barang);
+        localStorage.setItem('barangList', JSON.stringify(barangList));
+        tampilHalaman('halamanUtama');
+        document.getElementById('fotoBarang').value = "";
+        document.getElementById('namaBarang').value = "";
+        document.getElementById('ketBarang').value = "";
+        document.getElementById('hargaBarang').value = "";
+        document.getElementById('lokasiBarang').value = "";
+      };
+      reader.readAsDataURL(fotoInput);
+    }
+
+    function tampilkanBarang() {
+      const daftar = document.getElementById('daftarBarang');
+      daftar.innerHTML = '';
+      barangList.forEach((b, i) => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+          <img src="${b.foto}" class="preview">
+          <h3>${b.nama}</h3>
+          <p>${b.ket}</p>
+          <p><strong>Rp ${b.harga}</strong></p>
+          <p>${b.lokasi}</p>
+          <button onclick="pilihBarang(${i})">Beli</button>
+        `;
+        daftar.appendChild(div);
+      });
+    }
+
+    function tampilkanKelola() {
+      const daftar = document.getElementById('daftarKelola');
+      daftar.innerHTML = '';
+      barangList.forEach((b, i) => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+          <img src="${b.foto}">
+          <h3>${b.nama}</h3>
+          <p>${b.ket}</p>
+          <p><strong>Rp ${b.harga}</strong></p>
+          <p>${b.lokasi}</p>
+          <button onclick="hapusBarang(${i})">Hapus Barang</button>
+        `;
+        daftar.appendChild(div);
+      });
+    }
+
+    function hapusBarang(i) {
+      if (confirm("Yakin ingin menghapus barang ini?")) {
+        barangList.splice(i, 1);
+        localStorage.setItem('barangList', JSON.stringify(barangList));
+        tampilkanKelola();
+      }
+    }
+
+    function pilihBarang(i) {
+      barangDipilih = barangList[i];
+      tampilHalaman('halamanPembayaran');
+    }
+
+    function selesaiBeli() {
+      alert("Pembelian berhasil untuk " + barangDipilih.nama);
+      tampilHalaman('halamanSelesai');
+    }
+  </script>
+</body>
+</html>
